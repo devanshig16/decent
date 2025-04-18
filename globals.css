@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Custom global styles */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #845252;
+  background-image: url('https://www.transparenttextures.com/patterns/ashwood.png'); /* Optional subtle texture */
+  background-size: cover;
+  background-position: center;
+}
+
+/* Tailwind customizations */
+.bg-background {
+  background-color: #1e1e2f; /* Dark background for your content */
+}
+
+.text-foreground {
+  color: #eaeaea; /* Lighter text for readability */
+}
+
+h1 {
+  font-family: 'Roboto', sans-serif; /* More professional font for titles */
+}
+
+/* Button hover effects */
+button {
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
