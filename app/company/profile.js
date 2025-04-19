@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Navbar from '../../components/Navbar'; // Make sure you import the Navbar if it's not already.
+import Navbar from '../components/Navbar'; // Ensure Navbar is imported
 
-export default function Profile() {
-  const [form, setForm] = useState({ name: '', bio: '', skills: '', image: '' });
+export default function CompanyProfile() {
+  const [form, setForm] = useState({ name: '', industry: '', description: '' });
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -12,17 +12,17 @@ export default function Profile() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Profile saved (simulated).');
+    alert('Company profile saved (simulated).');
   };
 
   return (
     <div>
       <Navbar />
       <div className="p-6 max-w-2xl mx-auto">
-        <h1 className="text-3xl font-semibold mb-6">Create Your Profile</h1>
+        <h1 className="text-3xl font-semibold mb-6">Create Your Company Profile</h1>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="name" className="block text-lg font-medium">Name</label>
+            <label htmlFor="name" className="block text-lg font-medium">Company Name</label>
             <input
               type="text"
               id="name"
@@ -35,27 +35,27 @@ export default function Profile() {
           </div>
 
           <div>
-            <label htmlFor="bio" className="block text-lg font-medium">Bio</label>
-            <textarea
-              id="bio"
-              name="bio"
-              value={form.bio}
+            <label htmlFor="industry" className="block text-lg font-medium">Industry</label>
+            <input
+              type="text"
+              id="industry"
+              name="industry"
+              value={form.industry}
               onChange={handleChange}
               className="w-full p-3 border border-gray-300 rounded-lg"
-              rows="4"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="skills" className="block text-lg font-medium">Skills</label>
-            <input
-              type="text"
-              id="skills"
-              name="skills"
-              value={form.skills}
+            <label htmlFor="description" className="block text-lg font-medium">Company Description</label>
+            <textarea
+              id="description"
+              name="description"
+              value={form.description}
               onChange={handleChange}
               className="w-full p-3 border border-gray-300 rounded-lg"
+              rows="4"
               required
             />
           </div>
