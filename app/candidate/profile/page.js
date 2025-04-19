@@ -1,33 +1,31 @@
-//candidate/profile/page.js
 'use client';
+
 import { useEffect, useState } from 'react';
 import Navbar from '../../components/Navbar';
-import UploadProfilePic from '../../lib/UploadProfilePic';
+import UploadProfilePic from '../../lib/UploadProfilePic'; // Import the updated upload component
 import { connectMetaMask } from '../../lib/walletConnect';
-import {
-  getCandidateProfile,
-  addCandidateProfile,
-  updateCandidateProfile
-} from '../../lib/tableland_storage';
+import { getCandidateProfile, saveCandidateProfile } from '../../lib/profileStorage';
 
 export default function Profile() {
   const [wallet, setWallet] = useState('');
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({ name: '', bio: '', skills: '', image: '' });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const connectedWallet = await connectMetaMask();
         setWallet(connectedWallet);
+
         const userProfile = await getCandidateProfile(connectedWallet);
         if (userProfile) {
           setProfile(userProfile);
           setForm({
-            name: userProfile.name || '',
-            bio: userProfile.bio || '',
-            skills: userProfile.skills || '',
-            image: userProfile.image || ''
+            name: userProfile.name,
+            bio: userProfile.bio,
+            skills: userProfile.skills,
+            image: userProfile.image
           });
         }
       } catch (err) {
@@ -39,7 +37,7 @@ export default function Profile() {
   }, []);
 
   const handleImageUpload = (url) => {
-    setForm({ ...form, image: url });
+    setForm((prevForm) => ({ ...prevForm, image: url }));
   };
 
   const handleChange = (e) => {
@@ -48,23 +46,25 @@ export default function Profile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!form.image) {
       alert('Please upload a profile picture before submitting.');
       return;
     }
+
     try {
-      if (profile) {
-        await updateCandidateProfile(wallet, form.name, form.bio, form.skills, form.image);
-      } else {
-        await addCandidateProfile(wallet, form.name, form.bio, form.skills, form.image);
-      }
-      alert('Profile saved!');
+      setLoading(true);
+      console.log('Saving profile with data:', form);
+      const tx = await saveCandidateProfile(form);
+      console.log('Profile saved with tx:', tx?.hash);
+      alert('Profile successfully saved to the blockchain!');
     } catch (err) {
       console.error('Error saving profile:', err);
-      alert('Error saving profile');
+      alert('Error saving profile. Check console for details.');
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   return (
     <div>
@@ -118,15 +118,20 @@ export default function Profile() {
             <label className="block text-lg font-medium mb-2">Profile Picture</label>
             <UploadProfilePic onUploadComplete={handleImageUpload} />
             {form.image && (
-              <img src={form.image} alt="Profile" className="mt-4 w-32 h-32 object-cover rounded-full" />
+              <img
+                src={form.image}
+                alt="Profile"
+                className="mt-4 w-32 h-32 object-cover rounded-full"
+              />
             )}
           </div>
 
           <button
             type="submit"
+            disabled={loading}
             className="bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-8 rounded-lg transition"
           >
-            {profile ? 'Update Profile' : 'Create Profile'}
+            {loading ? 'Saving...' : profile ? 'Update Profile' : 'Create Profile'}
           </button>
         </form>
       </div>

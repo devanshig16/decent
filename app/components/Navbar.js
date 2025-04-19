@@ -13,9 +13,7 @@ export default function Navbar() {
           <Link href="/candidate/profile">
             <span className="hover:text-green-400 transition duration-200">Profile</span>
           </Link>
-          <Link href="/candidate/home">
-            <span className="hover:text-green-400 transition duration-200">Browse</span>
-          </Link>
+          
         </div>
       </nav>
     

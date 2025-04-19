@@ -1,22 +1,57 @@
-// /app/register/page.js
-
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { connectMetaMask } from '../lib/walletConnect';
-import { addUser } from '../lib/tableland_storage';
+import { getContract } from '../lib/contract';
 
 export default function RegisterPage() {
   const [role, setRole] = useState('');
+  const [wallet, setWallet] = useState('');
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const wallet = searchParams.get('wallet');
+
+  // Fetch wallet from MetaMask if it's not already set
+  useEffect(() => {
+    const fetchWalletFromMetaMask = async () => {
+      const currentWallet = await connectMetaMask(); // Fetch the connected wallet
+      setWallet(currentWallet);
+    };
+
+    // If no wallet is set, fetch it from MetaMask
+    if (!wallet) {
+      fetchWalletFromMetaMask();
+    }
+  }, [wallet]);
+
+  const registerUser = async (role) => {
+    const { contract, signer } = await getContract();
+    const address = wallet; // Use the wallet address here
+
+    const currentRole = await contract.getRole(address);
+    // 0 = None, 1 = Candidate, 2 = Company
+    if (currentRole.toString() !== '0') {
+      console.log('🛑 User already registered. Role:', currentRole.toString());
+      alert('You are already registered.');
+      return;
+    }
+
+    if (role === 'candidate') {
+      const tx = await contract.registerAsCandidate();
+      await tx.wait();
+    } else if (role === 'company') {
+      const tx = await contract.registerAsCompany();
+      await tx.wait();
+    }
+  };
 
   const handleSubmit = async () => {
+    if (!wallet) {
+      alert("Please connect your wallet.");
+      return;
+    }
+
     try {
-      const walletAddress = wallet || await connectMetaMask(); // fallback if query param not passed
-      await addUser(walletAddress, role);
+      await registerUser(role);
 
       if (role === 'company') {
         router.push('/company');
@@ -25,6 +60,7 @@ export default function RegisterPage() {
       }
     } catch (err) {
       console.error('Registration failed:', err);
+      alert('Registration failed');
     }
   };
 

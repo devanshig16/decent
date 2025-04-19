@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import axios from 'axios';
+import { uploadFileToIPFS } from '../lib/uploadToIPFS'; // Import the new function
 
 const UploadProfilePic = ({ onUploadComplete }) => {
   const [file, setFile] = useState(null);
@@ -16,22 +16,10 @@ const UploadProfilePic = ({ onUploadComplete }) => {
     if (!file) return;
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
-      const res = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
-        maxContentLength: 'Infinity',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: ` Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJkMzY3MGUzNS02OTZkLTQ4YjUtODIwNy1kOWIwNDEyMjI4OGIiLCJlbWFpbCI6ImR2c2ZvcmdlNUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiYzJiMmIxZjQwYjJiMGQ1Mjc4MjQiLCJzY29wZWRLZXlTZWNyZXQiOiJkMzlhNWJkNTAxMDQ1MDY3MmE2OWUyMjZlZDc0NjljODA5OThlMDM1NTljOGRhMjZhMzkyOWMxNzBhNTQ5ZjA4IiwiZXhwIjoxNzc2NDgwNjYxfQ.B8jLcLYgTzP9ePnpyEyRdsa1iMwfnna_eDXoAYk6DHE`, // Replace with your JWT from Pinata
-        },
-      });
-
-      const hash = res.data.IpfsHash;
-      const url = `https://gateway.pinata.cloud/ipfs/${hash}`;
+      const url = await uploadFileToIPFS(file); // Use the new IPFS upload function
       setIpfsUrl(url);
-      onUploadComplete(url); // Send IPFS URL to parent
+      onUploadComplete(url); // Notify parent component with the IPFS URL
     } catch (err) {
       console.error('Error uploading to Pinata:', err);
     } finally {

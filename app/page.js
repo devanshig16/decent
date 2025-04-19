@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { connectMetaMask } from './lib/walletConnect';
-import { getUserStatus } from './lib/tableland_storage';
+import { getContract } from './lib/contract';
 
 export default function Home() {
   const router = useRouter();
@@ -16,11 +16,24 @@ export default function Home() {
     }
   };
 
+  const checkUserRole = async (wallet) => {
+    const { contract } = await getContract(); // ✅ must destructure
+    
+    const role = await contract.getRole(wallet);
+
+    if (role.toString() === '1') return 'candidate';
+    if (role.toString() === '2') return 'company';
+    return 'none';
+  };
+  
+  
+  
+  
+
   const handleRegistered = async () => {
     try {
       const wallet = await connectMetaMask();
-      const role = await getUserStatus(wallet);
-
+      const role = await checkUserRole(wallet);
       if (role === 'company') {
         router.push('/company');
       } else if (role === 'candidate') {
