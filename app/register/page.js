@@ -1,44 +1,41 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { connectMetaMask } from '../lib/walletConnect';
 import { getContract } from '../lib/contract';
 
 export default function RegisterPage() {
   const [role, setRole] = useState('');
   const [wallet, setWallet] = useState('');
+  const [currentRole, setCurrentRole] = useState(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // Fetch wallet from MetaMask if it's not already set
   useEffect(() => {
-    const fetchWalletFromMetaMask = async () => {
-      const currentWallet = await connectMetaMask(); // Fetch the connected wallet
-      setWallet(currentWallet);
+    const init = async () => {
+      const walletFromQuery = searchParams.get('wallet');
+      const connectedWallet = walletFromQuery || await connectMetaMask();
+      setWallet(connectedWallet);
+
+      const { contract } = await getContract();
+      const role = await contract.getRole(connectedWallet);
+      console.log("🔍 Current role from contract:", role.toString());
+      setCurrentRole(role.toString());
+      setLoading(false);
     };
 
-    // If no wallet is set, fetch it from MetaMask
-    if (!wallet) {
-      fetchWalletFromMetaMask();
-    }
-  }, [wallet]);
+    init();
+  }, []);
 
-  const registerUser = async (role) => {
-    const { contract, signer } = await getContract();
-    const address = wallet; // Use the wallet address here
+  const registerUser = async (selectedRole) => {
+    const { contract } = await getContract();
 
-    const currentRole = await contract.getRole(address);
-    // 0 = None, 1 = Candidate, 2 = Company
-    if (currentRole.toString() !== '0') {
-      console.log('🛑 User already registered. Role:', currentRole.toString());
-      alert('You are already registered.');
-      return;
-    }
-
-    if (role === 'candidate') {
+    if (selectedRole === 'candidate') {
       const tx = await contract.registerAsCandidate();
       await tx.wait();
-    } else if (role === 'company') {
+    } else if (selectedRole === 'company') {
       const tx = await contract.registerAsCompany();
       await tx.wait();
     }
@@ -60,9 +57,21 @@ export default function RegisterPage() {
       }
     } catch (err) {
       console.error('Registration failed:', err);
-      alert('Registration failed');
+      alert('Registration failed. Check the console.');
     }
   };
+
+  if (loading) {
+    return <div className="text-center mt-10 text-white">Checking registration status...</div>;
+  }
+
+  if (currentRole !== '0') {
+    return (
+      <div className="text-center mt-10 text-white">
+        You are already registered. Redirecting...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center px-4">
