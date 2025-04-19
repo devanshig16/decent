@@ -15,20 +15,23 @@ export default function RegisterPage() {
 
   useEffect(() => {
     const init = async () => {
+      // Get wallet address from URL query parameter or from MetaMask connection
       const walletFromQuery = searchParams.get('wallet');
       const connectedWallet = walletFromQuery || await connectMetaMask();
       setWallet(connectedWallet);
 
+      // Fetch contract and check the role of the wallet
       const { contract } = await getContract();
-      const role = await contract.getRole(connectedWallet);
-      console.log("🔍 Current role from contract:", role.toString());
-      setCurrentRole(role.toString());
+      const roleFromContract = await contract.getRole(connectedWallet);
+      console.log("🔍 Current role from contract:", roleFromContract.toString());
+      setCurrentRole(roleFromContract.toString());
       setLoading(false);
     };
 
     init();
-  }, []);
+  }, [searchParams]);
 
+  // Function to register user based on the selected role
   const registerUser = async (selectedRole) => {
     const { contract } = await getContract();
 
@@ -41,6 +44,7 @@ export default function RegisterPage() {
     }
   };
 
+  // Handle the submit action for registration
   const handleSubmit = async () => {
     if (!wallet) {
       alert("Please connect your wallet.");
@@ -48,6 +52,7 @@ export default function RegisterPage() {
     }
 
     try {
+      // Register the user and redirect based on the role
       await registerUser(role);
 
       if (role === 'company') {
@@ -57,14 +62,16 @@ export default function RegisterPage() {
       }
     } catch (err) {
       console.error('Registration failed:', err);
-      alert('Registration failed. Check the console.');
+      alert('Registration failed. Please check the console for details.');
     }
   };
 
+  // If the page is still loading (checking the role), show loading message
   if (loading) {
     return <div className="text-center mt-10 text-white">Checking registration status...</div>;
   }
 
+  // If the user is already registered (role is not '0'), show a message and redirect
   if (currentRole !== '0') {
     return (
       <div className="text-center mt-10 text-white">
